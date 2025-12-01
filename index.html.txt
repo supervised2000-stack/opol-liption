@@ -1,0 +1,415 @@
+L T, [01/12/2025 9:38 PM]
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPOL</title>
+    <style>
+        :root {
+            --bg-color: #121212; 
+            --main-color: #4CAF50; /* أخضر إسلامي */
+            --accent-color: #FFC107; /* أصفر للإبراز */
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --control-bg: #333333; 
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px 10px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00BFFF; /* أزرق فاتح */
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            /* التوهج الأزرق */
+            text-shadow: 0 0 10px #00BFFF, 0 0 20px #00BFFF; 
+        }
+        
+        .select-container {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: var(--control-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        #qari-selector {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid var(--main-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            font-size: 1.1em;
+            cursor: pointer;
+            appearance: none;
+            margin-bottom: 0;
+        }
+        
+        /* تنسيق أقسام القراء والمفضلة */
+        .qari-section {
+            background-color: var(--control-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            display: none; 
+        }
+        
+        .qari-section.active {
+            display: block; 
+        }
+
+        .qari-section h2 {
+            color: var(--accent-color);
+            font-size: 1.6em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: none; 
+        }
+
+        /* تنسيق المشغلات والتحكم بالمفضلة */
+        .audio-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-right: 3px solid var(--accent-color);
+        }
+
+        .audio-info {
+            flex-grow: 1; 
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        .audio-info h3 {
+            color: var(--text-color);
+            margin: 0 0 5px 0;
+            font-size: 1em;
+        }
+
+        .audio-info p {
+            font-size: 0.8em;
+            color: var(--main-color);
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 5px;
+            filter: invert(0.9);
+            border-radius: 5px;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: gray;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .favorite-btn.is-favorite {
+            color: var(--accent-color); 
+        }
+        
+        .empty-favorites {
+            color: var(--accent-color);
+            padding: 20px;
+            border: 1px dashed var(--accent-color);
+            border-radius: 8px;
+        }
+        
+        .favorites-list-title {
+            color: var(--main-color);
+            font-size: 1.6em;
+            margin-bottom: 20px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+L T, [01/12/2025 9:38 PM]
+<div class="container">
+    <h1>OPOL</h1>
+    
+    <div class="select-container">
+        <select id="qari-selector" onchange="displayQari(this.value)">
+            <option value="" disabled selected>--- اختر القارئ ---</option>
+            <option value="favorites">⭐ المفضلة</option>
+            </select>
+    </div>
+    
+    <div id="favorites-section" class="qari-section">
+        <h2 class="favorites-list-title" style="display: block;">⭐ المشغلات المفضلة</h2>
+        <div id="favorites-list" class="audio-list">
+            </div>
+    </div>
+
+    <div id="quran-library-container">
+        </div>
+
+</div>
+
+<script>
+    const allQaris = [
+        // تم تصحيح القارئ (afs) لـ أحمد علي العجمي
+        { name: "أحمد علي العجمي", base_url: "https://server8.mp3quran.net/afs/", code: "afs" },
+        // محمد أحمد الزين بالرابط الصحيح (alzain)
+        { name: "محمد أحمد الزين", base_url: "https://server9.mp3quran.net/alzain/", code: "alzain" }, 
+
+        // القراء الآخرون
+        { name: "عبد الودود حنيف", base_url: "https://server8.mp3quran.net/wdod/", code: "wdod" },
+        { name: "أحمد الريان", base_url: "https://server8.mp3quran.net/ryan/", code: "ryan" },
+        { name: "رعد الكردي", base_url: "https://server8.mp3quran.net/ra3ad/", code: "ra3ad" },
+        { name: "هاشم قاسم", base_url: "https://server8.mp3quran.net/qasm/", code: "qasm" },
+        { name: "نورين محمد صديق", base_url: "https://server8.mp3quran.net/noah/", code: "noah" },
+        { name: "عبد الله مطرود", base_url: "https://server8.mp3quran.net/mtrod/", code: "mtrod" },
+        { name: "مصطفى اللاهوني", base_url: "https://server8.mp3quran.net/mustafa/", code: "mustafa" },
+        { name: "خالد عبد الكافي", base_url: "https://server8.mp3quran.net/a_klb/", code: "aklb" },
+        { name: "أحمد الحذيفي", base_url: "https://server8.mp3quran.net/ahmad_huth/", code: "ahuth" },
+        { name: "أيوب", base_url: "https://server8.mp3quran.net/ayyub/", code: "ayyub" },
+        { name: "محمد بن عبد الله", base_url: "https://server8.mp3quran.net/bna/", code: "bna" },
+        { name: "عبد العزيز البرمي", base_url: "https://server8.mp3quran.net/brmi/", code: "brmi" },
+        { name: "محمد البجناوي", base_url: "https://server8.mp3quran.net/buajan/", code: "bjan" },
+        { name: "فارس عباد", base_url: "https://server8.mp3quran.net/frs_a/", code: "frs" },
+        { name: "هاني الرفاعي", base_url: "https://server8.mp3quran.net/hani/", code: "hani" },
+        { name: "محمد القاري", base_url: "https://server8.mp3quran.net/m_qari/", code: "mqari" },
+        { name: "ماجد العنزي", base_url: "https://server8.mp3quran.net/majd_onazi/", code: "monazi" },
+        { name: "علي السهود", base_url: "https://server8.mp3quran.net/sahood/", code: "sahood" },
+        { name: "محمد الأركاني", base_url: "https://server7.mp3quran.net/m_arkani/", code: "markani" },
+        { name: "سعد الغامدي", base_url: "https://server7.mp3quran.net/s_gmd/", code: "sgmd" },
+        { name: "وديع اليمني", base_url: "https://server6.mp3quran.net/wdee3/", code: "wdee3" }
+    ];
+
+    const surahNames = [
+        "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", 
+        "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل", "الإسراء", "الكهف", "مريم", "طه", 
+        "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", 
+        "لقمان", "السجدة", "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", 
+        "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق", 
+        "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", 
+        "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم", "الملك", "القلم", "الحاقة", "المعارج",
+
+L T, [01/12/2025 9:38 PM]
+"نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", 
+        "التكوير", "الانفطار", "المطففين", "الانشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", 
+        "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", 
+        "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", 
+        "المسد", "الإخلاص", "الفلق", "الناس"
+    ];
+
+    const libraryContainer = document.getElementById('quran-library-container');
+    const selector = document.getElementById('qari-selector');
+    const favoritesList = document.getElementById('favorites-list');
+    const favoritesSection = document.getElementById('favorites-section');
+    const totalSurahs = 114;
+    const FAVORITES_KEY = 'ty_quran_favorites';
+    
+    // متغير لتخزين المشغل الصوتي الذي يعمل حاليًا
+    let currentlyPlaying = null; 
+
+    // --------------------------------------------------------
+    // وظائف المفضلة
+    // --------------------------------------------------------
+
+    function getFavorites() {
+        try {
+            return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function saveFavorites(favorites) {
+        try {
+            localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+        } catch (e) {
+            // تجاهل خطأ التخزين
+        }
+    }
+
+    // تبديل حالة التفضيل
+    function toggleFavorite(qariCode, surahIndex, qariName, surahName) {
+        const favorites = getFavorites();
+        const key = ${qariCode}-${surahIndex};
+        const btn = document.getElementById(fav-btn-${key});
+
+        if (favorites[key]) {
+            delete favorites[key];
+            if (btn) btn.classList.remove('is-favorite');
+            if (btn) btn.innerHTML = '☆';
+        } else {
+            favorites[key] = { qariCode, surahIndex, qariName, surahName };
+            if (btn) btn.classList.add('is-favorite');
+            if (btn) btn.innerHTML = '★';
+        }
+
+        saveFavorites(favorites);
+        // تحديث عرض المفضلة إذا كنا في قسم المفضلة
+        if (selector.value === 'favorites') {
+            renderFavorites();
+        }
+    }
+    
+    // --------------------------------------------------------
+    // وظيفة منع تداخل الأصوات (الجديدة)
+    // --------------------------------------------------------
+    function handleAudioPlay(event) {
+        // إذا كان هناك مشغل صوتي آخر يعمل
+        if (currentlyPlaying && currentlyPlaying !== event.target) {
+            currentlyPlaying.pause();
+        }
+        // تحديث المشغل الصوتي الذي يعمل حاليًا
+        currentlyPlaying = event.target;
+    }
+
+    // --------------------------------------------------------
+    // وظائف العرض والتوليد
+    // --------------------------------------------------------
+
+    // توليد المشغل الصوتي (Reusable function)
+    function createAudioCard(qari, surahIndex, surahName, isFavorite = false) {
+        const fileNumber = String(surahIndex).padStart(3, '0');
+        const fullUrl = ${qari.base_url}${fileNumber}.mp3;
+        const key = ${qari.code}-${surahIndex};
+
+        const audioCard = document.createElement('div');
+        audioCard.className = 'audio-card';
+        audioCard.id = card-${key};
+
+        const favoritesStatus = getFavorites();
+        const isFav = isFavorite || !!favoritesStatus[key];
+
+        const cardInnerContent = `
+            <div class="audio-info">
+                <h3>${surahIndex}. ${surahName}</h3>
+                <p>القارئ: ${qari.name}</p>
+                <audio controls preload="none" onplay="window.handleAudioPlay(event)">
+                    <source src="${fullUrl}" type="audio/mpeg">
+                    متصفحك لا يدعم مشغل الصوت.
+
+L T, [01/12/2025 9:38 PM]
+</audio>
+            </div>
+            <button id="fav-btn-${key}" 
+                    class="favorite-btn ${isFav ? 'is-favorite' : ''}" 
+                    onclick="window.toggleFavorite('${qari.code}', ${surahIndex}, '${qari.name.replace(/'/g, "\\'")}', '${surahName.replace(/'/g, "\\'")}')">
+                ${isFav ? '★' : '☆'}
+            </button>
+        ;
+
+        audioCard.innerHTML = cardInnerContent;
+        return audioCard;
+    }
+
+    // توليد الأقسام الرئيسية وتعبئة القائمة المنسدلة
+    function initializeLibrary() {
+        allQaris.forEach((qari, index) => {
+            const qariId = qari-${qari.code};
+            
+            // إضافة خيار القارئ إلى القائمة المنسدلة
+            const option = document.createElement('option');
+            option.value = qariId;
+            option.textContent = qari.name;
+            selector.appendChild(option);
+
+            // إنشاء قسم القارئ (مخفي افتراضياً)
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'qari-section';
+            sectionDiv.id = qariId; 
+            
+            sectionDiv.innerHTML = <h2>${qari.name}</h2><div class="audio-list"></div>;
+            const audioListContainer = sectionDiv.querySelector('.audio-list');
+
+            // توليد مشغلات السور الـ 114
+            for (let i = 1; i <= totalSurahs; i++) {
+                const surahName = surahNames[i - 1] || سورة برقم: ${i};
+                const card = createAudioCard(qari, i, surahName);
+                audioListContainer.appendChild(card);
+            }
+
+            libraryContainer.appendChild(sectionDiv);
+        });
+    }
+
+    // وظيفة عرض القارئ المختار
+    function displayQari(selectedId) {
+        // إيقاف أي صوت يعمل قبل تغيير القائمة
+        if (currentlyPlaying) {
+            currentlyPlaying.pause();
+            currentlyPlaying = null;
+        }
+
+        const allSections = document.querySelectorAll('.qari-section');
+        
+        // إخفاء جميع الأقسام (بما في ذلك المفضلة)
+        allSections.forEach(section => {
+            section.classList.remove('active');
+        });
+        favoritesSection.classList.remove('active');
+        
+        // إظهار القسم المختار
+        if (selectedId === 'favorites') {
+            renderFavorites();
+            favoritesSection.classList.add('active');
+        } else if (selectedId) {
+            const activeSection = document.getElementById(selectedId);
+            if (activeSection) {
+                activeSection.classList.add('active');
+            }
+        }
+    }
+
+    // عرض قائمة المفضلة
+    function renderFavorites() {
+        const favorites = getFavorites();
+        const keys = Object.keys(favorites);
+        favoritesList.innerHTML = ''; // تفريغ القائمة
+
+        if (keys.length === 0) {
+            favoritesList.innerHTML = <div class="empty-favorites">لا توجد لديك أي سورة في المفضلة بعد. اضغط على رمز (☆) بجوار أي سورة لإضافتها.</div>`;
+            return;
+        }
+
+        keys.forEach(key => {
+            const fav = favorites[key];
+            const qari = allQaris.find(q => q.code === fav.qariCode);
+            
+            if (qari) {
+                // ننشئ نسخة من بطاقة المشغل ونضعها في قائمة المفضلة
+                const card = createAudioCard(qari, fav.surahIndex, fav.surahName, true);
+                favoritesList.appendChild(card);
+            }
+        });
+    }
+
+
+    // تهيئة المكتبة عند تحميل الصفحة
+    initializeLibrary();
+    // إتاحة الوظائف للـ HTML
+    window.toggleFavorite = toggleFavorite;
+    window.displayQari = displayQari; 
+    window.handleAudioPlay = handleAudioPlay; // إضافة الوظيفة لمنع التداخل
+</script>
+
+</body>
+</html>
